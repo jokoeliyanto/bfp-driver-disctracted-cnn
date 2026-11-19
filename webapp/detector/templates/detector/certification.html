@@ -3,7 +3,7 @@
 {% block title %}Certification · DriveFocus{% endblock %}
 {% block content %}
 <section class="profile card">
-  <img class="profile-photo" src="{% static 'detector/img/joko-eliyanto.png' %}" alt="Photo of {{ author.name }}">
+  <img class="profile-photo" src="{% static 'detector/img/joko-eliyanto-avatar.jpg' %}" alt="Photo of {{ author.name }}">
   <div class="profile-body">
     <div class="eyebrow">About the author</div>
     <h1>{{ author.name }}</h1>
@@ -38,7 +38,7 @@
   </section>
 
   <section class="card badge-card">
-    <img class="badge" src="{% static 'detector/img/logo.svg' %}" alt="">
+    <img class="badge-logo" src="{% static 'detector/img/bangkit-logo.png' %}" alt="Bangkit">
     <h2>{{ certificate.title }}</h2>
     <dl class="cert-meta">
       <dt>Programme</dt><dd>{{ certificate.programme }}</dd>
