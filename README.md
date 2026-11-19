@@ -152,7 +152,7 @@ A Django app with a Google-colour, Material-style design. The detector page look
 It also has a JSON API:
 
 ```bash
-curl -F image=@driver.jpg http://127.0.0.1:8000/api/predict/
+curl -F image=@driver.jpg http://127.0.0.1:8010/api/predict/
 # {"code": "c6", "label": "Drinking", "distracted": true, "confidence": 0.98, "p_safe": 0.0, ...}
 ```
 
@@ -183,7 +183,7 @@ python scripts/build_metrics.py                        # optional: rebuild model
 
 cd webapp
 python manage.py test detector                         # 15 tests
-python manage.py runserver                             # http://127.0.0.1:8000
+python manage.py runserver 8010                        # http://127.0.0.1:8010
 ```
 
 The model is rebuilt in Keras from the TensorFlow.js shards at the first prediction
