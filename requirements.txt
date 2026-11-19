@@ -1,8 +1,9 @@
-keras
-keras-gpu
-tensorflow
-tensorflow-gpu
-scikit-learn
-PyDrive
-cv2
-scikit-learn
+# Scripts (scripts/build_metrics.py, scripts/evaluate.py) and the web app.
+# The original 2020 notebook ran on Google Colab (Python 3.6, TensorFlow 2.2) with PyDrive for the data download.
+tensorflow>=2.16
+numpy>=1.26
+pillow>=10.0
+matplotlib>=3.8
+django>=5.2,<5.3
+nbconvert>=7.0
+nbformat>=5.9

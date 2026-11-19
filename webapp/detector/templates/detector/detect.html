@@ -1,0 +1,162 @@
+{% extends "detector/base.html" %}
+{% load static detector_extras %}
+{% block title %}Detect · DriveFocus{% endblock %}
+{% block content %}
+<div class="detect-layout">
+  <!-- ============ The phone ============ -->
+  <div class="phone-col">
+    <div class="phone" aria-label="DriveFocus app preview">
+      <div class="screen">
+        <div class="statusbar"><span>9:41</span><span class="notch"></span><span class="icons"><s></s><i></i></span></div>
+        <div class="appbar">
+          <img src="{% static 'detector/img/logo.svg' %}" alt="">
+          <span class="title">DriveFocus</span>
+          <span class="live">● On-device model</span>
+        </div>
+
+        <div class="app-body">
+          <div class="viewfinder{% if result %}{% if result.distracted %} distracted{% else %} focused{% endif %}{% else %} empty{% endif %}">
+            {% if result %}
+              <img src="{{ result.preview }}" alt="The photo that was classified">
+              <span class="vf-tag">{% if result.sample %}Sample frame{% else %}Your photo{% endif %}</span>
+            {% else %}
+              <div class="vf-empty">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#9aa0a6" stroke-width="1.6"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>
+                Point the camera at the driver,<br>or upload a dashboard photo.
+              </div>
+            {% endif %}
+            <span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
+          </div>
+
+          <form method="post" enctype="multipart/form-data" id="upload-form">
+            {% csrf_token %}
+            <div class="upload-row">
+              <label class="upload-btn" for="id_image">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 16V4m0 0-4 4m4-4 4 4M5 20h14"/></svg>
+                Upload photo
+              </label>
+              {{ form.image }}
+            </div>
+            <noscript><button class="btn" type="submit" style="width:100%">Classify</button></noscript>
+          </form>
+          {% for err in form.image.errors %}<div class="app-error">{{ err }}</div>{% endfor %}
+          <p class="app-help">{{ form.image.help_text }} Photos are processed in memory and never stored.</p>
+          <div class="samples-label">Try a sample frame</div>
+          <div class="samples">
+            {% for s in samples %}
+            <a href="?sample={{ s }}" class="sample-link{% if result.sample == s %} current{% endif %}" title="Sample {{ forloop.counter }}">
+              <img src="{% static 'detector/samples/'|add:s %}" alt="Sample dashboard frame {{ forloop.counter }}" loading="lazy">
+            </a>
+            {% endfor %}
+          </div>
+
+          {% if result %}
+          <div class="verdict {% if result.distracted %}distracted{% else %}focused{% endif %}" role="status">
+            <div class="icon">
+              {% if result.distracted %}
+              <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M12 3 2 20h20L12 3z"/><path d="M12 10v4m0 3v.01"/></svg>
+              {% else %}
+              <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4"><path d="m5 12 5 5 9-10"/></svg>
+              {% endif %}
+            </div>
+            <div>
+              <div class="big">{% if result.distracted %}DISTRACTED{% else %}FOCUSED{% endif %}</div>
+              <div class="sub">{{ result.label }} · {{ result.confidence|pct }} confidence</div>
+            </div>
+          </div>
+          {% if result.distracted %}<div class="warn">🔔 In the Android app this would sound the alarm: <b>eyes on the road</b>.</div>{% endif %}
+          {% if result.low_confidence %}<div class="warn">Low confidence: the model is unsure about this photo. Treat the result with caution.</div>{% endif %}
+
+          <div class="sheet">
+            <h4>Safe vs. distracted</h4>
+            <div class="meter" aria-hidden="true">
+              <div class="safe" style="width:{{ result.p_safe|pct_width }}"></div><div class="dis" style="width:{{ result.p_distracted|pct_width }}"></div>
+            </div>
+            <div class="meter-legend"><span>Safe driving {{ result.p_safe|pct }}</span><span>Any distraction {{ result.p_distracted|pct }}</span></div>
+          </div>
+          <div class="sheet">
+            <h4>Top activities</h4>
+            {% for p in result.top %}
+            <div class="bar {% if p.distracted %}distracted{% else %}safe{% endif %}">
+              <div class="row"><span><code>{{ p.code }}</code> {{ p.name }}</span><b>{{ p.probability|pct:1 }}</b></div>
+              <div class="track"><div class="fill" style="width:{{ p.probability|pct_width }}"></div></div>
+            </div>
+            {% endfor %}
+          </div>
+          {% endif %}
+
+        </div>
+        <div class="homebar"></div>
+        <div class="loading" id="loading"><div class="spinner"></div>Analysing the driver…</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ Explanation ============ -->
+  <div>
+    <section class="intro">
+      <div class="eyebrow">Bangkit 2020 · Top 4 final project</div>
+      <h1>Is the driver paying attention?</h1>
+      <p class="lead">Upload a dashboard-camera photo and a MobileNet CNN decides whether the driver is <b style="color:var(--green-ink)">focused</b>
+         or <b style="color:var(--red-ink)">distracted</b>, and by what. The phone on the left mirrors the Android app our team built, which watches the driver and sounds an alarm.</p>
+    </section>
+
+    <div class="grid-4 stack">
+      <div class="stat blue"><div class="value">{{ deployed.best_val_accuracy|pct:1 }}</div><div class="label">Validation accuracy</div><div class="note">random split, optimistic</div></div>
+      <div class="stat red"><div class="value">10</div><div class="label">Activities</div><div class="note">1 safe, 9 distractions</div></div>
+      <div class="stat yellow"><div class="value">{{ metrics.deployed.cpu_latency.median_ms|floatformat:0 }} ms</div><div class="label">Per frame on CPU</div><div class="note">batch of 1, median</div></div>
+      <div class="stat green"><div class="value">{{ metrics.dataset.labelled_images|thousands }}</div><div class="label">Training images</div><div class="note">{{ metrics.dataset.n_drivers }} drivers</div></div>
+    </div>
+
+    <section class="card">
+      <h2>How the decision is made</h2>
+      <ol class="steps">
+        <li><b>Resize</b> the photo to 224 × 224 RGB. Pixel values stay in 0–255, the range the published weights expect.</li>
+        <li><b>MobileNet</b> (ImageNet features) plus a small trained head scores the ten State Farm activities.</li>
+        <li><b>Decide:</b> if the top activity is anything other than <code>c0</code> safe driving, the driver is flagged as distracted.</li>
+        <li><b>Alert:</b> the app sounds an alarm. Here you see the verdict, the confidence and the runner-up activities.</li>
+      </ol>
+    </section>
+
+    <section class="card">
+      <h2>The ten activities</h2>
+      <div class="class-grid">
+        {% for c in classes %}
+        <div class="class-item{% if not c.distracted %} safe{% endif %}{% if result and result.code == c.code %} hit{% endif %}">
+          <code>{{ c.code }}</code> {{ c.name }}
+        </div>
+        {% endfor %}
+      </div>
+      <p class="muted small" style="margin-top:12px">Green = safe, red = distracted. "Right" and "left" refer to the driver's hand in a
+         left-hand-drive car, as in the State Farm photos.</p>
+    </section>
+
+    <section class="card accent yellow">
+      <h2>Read the result with care</h2>
+      <ul class="facts">
+        <li>The sample frames are small thumbnails (about 200 × 150 px) cut from the dataset's preview image, so they are blurrier than real input.
+            Half of them come out as "operating the radio", a sign that small, blurry input hurts. The thumbnails have no ground-truth label, so they are a demo, not a test.</li>
+        <li>The model only knows the State Farm set-up: one camera angle, daylight, left-hand-drive cars. Photos from other angles,
+            at night, or from right-hand-drive cars (as in Indonesia) are outside what it learned.</li>
+        <li>The 98% validation score shares drivers with the training data, so expect lower accuracy on new people.
+            <a href="{% url 'detector:evaluation' %}">See the evaluation →</a></li>
+      </ul>
+    </section>
+
+    <section class="card">
+      <h2>Use it from code</h2>
+      <p class="muted">The same model is available as a JSON API:</p>
+      <pre style="background:#f1f3f4;border-radius:14px;padding:14px;overflow-x:auto"><code style="background:none">curl -F image=@driver.jpg {{ request.scheme }}://{{ request.get_host }}{% url 'detector:api_predict' %}</code></pre>
+    </section>
+  </div>
+</div>
+
+<script>
+  // Submit as soon as a file is picked, and show a spinner while the server classifies it
+  const input = document.getElementById("id_image");
+  const loading = document.getElementById("loading");
+  input.addEventListener("change", () => { if (input.files.length) { loading.classList.add("on"); input.form.submit(); } });
+  document.querySelectorAll(".sample-link").forEach(a => a.addEventListener("click", () => loading.classList.add("on")));
+  window.addEventListener("pageshow", () => loading.classList.remove("on"));
+</script>
+{% endblock %}

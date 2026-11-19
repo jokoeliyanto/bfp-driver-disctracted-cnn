@@ -1,0 +1,138 @@
+{% extends "detector/base.html" %}
+{% load static detector_extras %}
+{% block title %}The project · DriveFocus{% endblock %}
+{% block content %}
+<section class="hero stack">
+  <div>
+    <div class="eyebrow">Business case</div>
+    <h1>A phone on the dashboard that notices when the driver stops paying attention</h1>
+    <p class="lead">DriveFocus was our Bangkit 2020 capstone: an Android app that watches the driver through the phone's camera,
+       recognises ten in-car activities with a compact CNN, and sounds an alarm when the driver is distracted. Google Indonesia named it
+       one of the four best final projects of the 2020 cohort.</p>
+    <div class="actions">
+      <a class="btn" href="{% url 'detector:detect' %}">Try the detector</a>
+      <a class="btn btn-secondary" href="{{ achievement.url }}" target="_blank" rel="noopener">Read the Google blog feature</a>
+    </div>
+  </div>
+  <img src="{% static 'figures/imageexample.png' %}" alt="Eight example frames from the State Farm dataset showing drivers texting, calling, drinking and reaching">
+</section>
+
+<div class="grid-4 stack">
+  <div class="stat red"><div class="value">1.19M</div><div class="label">Road deaths a year</div><div class="note">worldwide, WHO 2023</div></div>
+  <div class="stat yellow"><div class="value">3,275</div><div class="label">Distraction deaths</div><div class="note">US 2023, 8% of all (NHTSA)</div></div>
+  <div class="stat blue"><div class="value">{{ metrics.deployed.cpu_latency.median_ms|floatformat:0 }} ms</div><div class="label">Per frame</div><div class="note">laptop CPU, no GPU</div></div>
+  <div class="stat green"><div class="value">0</div><div class="label">Images uploaded</div><div class="note">the app runs offline, on the phone</div></div>
+</div>
+
+<div class="grid-2 stack">
+  <section class="card accent red">
+    <h2>Background</h2>
+    <p>Road crashes kill about <b>1.19 million people a year</b> (<a href="https://www.who.int/publications/i/item/9789240086517" target="_blank" rel="noopener">WHO, 2023</a>).
+       Distraction is one of the few causes that sits entirely inside the car: in the United States alone, distraction-affected crashes killed
+       <b>3,275 people in 2023</b> (<a href="https://crashstats.nhtsa.dot.gov/Api/Public/Publication/813703" target="_blank" rel="noopener">NHTSA</a>).</p>
+    <p>Our team started from the same worry in Indonesia, where accident numbers kept climbing and many crashes come down to drivers who were
+       not watching the road. Phones are the main culprit, yet every driver already carries one, which makes the phone itself a natural place
+       for a safety assistant.</p>
+  </section>
+  <section class="card accent">
+    <h2>The problem we set out to solve</h2>
+    <p><b>Detect distracted driving in real time, on a phone, without an internet connection.</b></p>
+    <ul class="facts">
+      <li>Classify the driver into one of ten activities from a single camera frame.</li>
+      <li>Turn that into a yes/no decision, <em>distracted</em> or <em>focused</em>, and alert the driver immediately.</li>
+      <li>Fit on a mid-range Android phone: small model, low latency, no server round-trip.</li>
+    </ul>
+    <p class="muted small">The ten activities and the 22,424 labelled photos come from the
+       <a href="{{ metrics.dataset.url }}" target="_blank" rel="noopener">State Farm Distracted Driver Detection</a> challenge on Kaggle,
+       posted by a US car insurer for the same reason.</p>
+  </section>
+</div>
+
+<section class="card stack">
+  <h2>Who would pay for this, and why</h2>
+  <div class="grid-3">
+    <div class="persona"><span class="chip blue">Ride-hailing &amp; delivery</span>
+      <p>Platforms with thousands of drivers on the road all day want fewer crashes, fewer insurance claims and safer trips for passengers.
+         An in-app alert costs almost nothing per driver.</p></div>
+    <div class="persona"><span class="chip red">Logistics &amp; bus fleets</span>
+      <p>Fleet managers need evidence of risky behaviour for coaching, not just after-the-fact crash reports. Aggregated alert counts per trip
+         give them a leading indicator.</p></div>
+    <div class="persona"><span class="chip green">Insurers</span>
+      <p>Usage-based insurance prices risk from behaviour. Distraction events per 100 km are a stronger signal than age or postcode, and could
+         reward attentive drivers with lower premiums.</p></div>
+  </div>
+</section>
+
+<section class="card stack">
+  <h2>How the solution works</h2>
+  <div class="flow">
+    <div class="node blue"><b>1 · Camera</b>Phone mounted on the passenger side, facing the driver.</div><div class="arrow">→</div>
+    <div class="node red"><b>2 · MobileNet</b>TensorFlow Lite model on the phone scores ten activities per frame.</div><div class="arrow">→</div>
+    <div class="node yellow"><b>3 · Decision</b>Anything other than "safe driving" counts as distracted.</div><div class="arrow">→</div>
+    <div class="node green"><b>4 · Alarm</b>A sound alerts the driver; events can be logged for the fleet.</div>
+  </div>
+  <p class="muted small" style="margin-top:14px">This web app runs the same weights on a server so the model can be tried in a browser. The original
+     Android app loaded the TensorFlow Lite export from the notebook's last cell.</p>
+</section>
+
+<div class="grid-2 stack">
+  <section class="card">
+    <h2>Why MobileNet</h2>
+    <p>Our first model, a CNN trained from scratch, actually scored slightly higher on validation ({{ baseline.best_val_accuracy|pct:1 }}
+       vs {{ deployed.best_val_accuracy|pct:1 }}), but it took {{ baseline.seconds_per_epoch }} s per epoch to train and learned everything
+       from 26 drivers. We chose <b>transfer learning</b> from ImageNet MobileNet because:</p>
+    <ul class="facts">
+      <li><b>Built for phones:</b> depthwise-separable convolutions keep inference light enough for real time.</li>
+      <li><b>Less room to memorise:</b> the frozen ImageNet features cannot adapt to the 26 drivers in the dataset, so the model has to rely on general visual cues. (Whether that helps on new drivers still needs a driver-split test.)</li>
+      <li><b>Faster to iterate:</b> {{ deployed.seconds_per_epoch }} s per epoch instead of {{ baseline.seconds_per_epoch }} s, with dropout against overfitting.</li>
+    </ul>
+    <p><a href="{% url 'detector:evaluation' %}">Full comparison on the Evaluation page →</a></p>
+  </section>
+  <section class="card">
+    <h2>Success metrics</h2>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Metric</th><th>Why it matters</th></tr></thead>
+      <tbody>
+        <tr><td><b>Distraction recall</b></td><td>A missed distraction is the costly error: no alarm, possible crash.</td></tr>
+        <tr><td><b>False alarms per hour</b></td><td>Too many alarms and drivers mute the app (alert fatigue).</td></tr>
+        <tr><td><b>Latency per frame</b></td><td>Alerts must arrive within a second to be useful.</td></tr>
+        <tr><td><b>Accuracy on unseen drivers</b></td><td>The real-world test: every customer is a new face.</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+</div>
+
+<div class="grid-2 stack">
+  <section class="card accent yellow">
+    <h2>Risks and what we would do next</h2>
+    <ul class="facts">
+      <li><b>Right-hand-drive cars.</b> State Farm photos come from US cars; in Indonesia the driver sits on the right. Mirroring the
+          images (and swapping the left/right labels) or collecting local data is needed before launch.</li>
+      <li><b>New drivers.</b> Re-evaluate with a split by driver, so the score reflects people the model has never seen.</li>
+      <li><b>Night and cabin variety.</b> Add infrared frames, different car interiors and camera positions.</li>
+      <li><b>Temporal smoothing.</b> Alert only after the distraction lasts a few frames, to cut false alarms.</li>
+    </ul>
+  </section>
+  <section class="card accent green">
+    <h2>Privacy by design</h2>
+    <p>Pointing a camera at a person needs care. The design keeps video on the phone: frames are classified on the device and only the
+       label, never the image, would leave it. Fleet use would require the driver's informed consent and clear rules about who sees the
+       alert log. This web demo classifies uploads in memory and does not store them.</p>
+  </section>
+</div>
+
+<section class="card">
+  <h2>The team · Bangkit 2020, Yogyakarta</h2>
+  <div class="team">
+    {% for m in team %}
+    <div class="member">
+      <div class="avatar">{{ m.name|slice:":1" }}</div>
+      <h3>{{ m.name }}</h3>
+      <p class="muted small">{{ m.role }}{% if m.url %} · <a href="{{ m.url }}" target="_blank" rel="noopener">repository</a>{% endif %}</p>
+    </div>
+    {% endfor %}
+  </div>
+  <p class="muted small" style="margin-top:14px">Bangkit is a Google-led academy run with Gojek, Tokopedia and Traveloka. Final projects were built in teams
+     over the last weeks of the 2020 programme. <a href="{% url 'detector:certification' %}">Certificate and recognition →</a></p>
+</section>
+{% endblock %}

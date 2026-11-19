@@ -1,0 +1,424 @@
+{
+  "generated": "2026-11-19",
+  "model_name": "MobileNet transfer learning",
+  "classes": [
+    {
+      "code": "c0",
+      "name": "Safe driving",
+      "distracted": false
+    },
+    {
+      "code": "c1",
+      "name": "Texting (right hand)",
+      "distracted": true
+    },
+    {
+      "code": "c2",
+      "name": "Talking on the phone (right)",
+      "distracted": true
+    },
+    {
+      "code": "c3",
+      "name": "Texting (left hand)",
+      "distracted": true
+    },
+    {
+      "code": "c4",
+      "name": "Talking on the phone (left)",
+      "distracted": true
+    },
+    {
+      "code": "c5",
+      "name": "Operating the radio",
+      "distracted": true
+    },
+    {
+      "code": "c6",
+      "name": "Drinking",
+      "distracted": true
+    },
+    {
+      "code": "c7",
+      "name": "Reaching behind",
+      "distracted": true
+    },
+    {
+      "code": "c8",
+      "name": "Hair and makeup",
+      "distracted": true
+    },
+    {
+      "code": "c9",
+      "name": "Talking to passenger",
+      "distracted": true
+    }
+  ],
+  "image_size": 224,
+  "preprocessing": "RGB, resized to 224 x 224, raw pixel values 0-255",
+  "dataset": {
+    "name": "State Farm Distracted Driver Detection (Kaggle)",
+    "url": "https://www.kaggle.com/c/state-farm-distracted-driver-detection/data",
+    "labelled_images": 22424,
+    "train_images": 17943,
+    "val_images": 4481,
+    "n_classes": 10,
+    "n_drivers": 26,
+    "split": "Random 80/20 per class (Keras validation_split); the same drivers appear in both subsets"
+  },
+  "runs": [
+    {
+      "key": "baseline",
+      "name": "Baseline CNN (from scratch)",
+      "description": "4 Conv2D + MaxPooling blocks (512-256-128-64 filters), Dense 512, Dense 10. Adam 1e-4.",
+      "history": [
+        {
+          "epoch": 1,
+          "loss": 0.5788,
+          "accuracy": 0.8061,
+          "val_loss": 0.1089,
+          "val_accuracy": 0.9708,
+          "seconds": 648,
+          "steps": 1122
+        },
+        {
+          "epoch": 2,
+          "loss": 0.0687,
+          "accuracy": 0.9805,
+          "val_loss": 0.1009,
+          "val_accuracy": 0.9732,
+          "seconds": 648,
+          "steps": 1122
+        },
+        {
+          "epoch": 3,
+          "loss": 0.0329,
+          "accuracy": 0.9909,
+          "val_loss": 0.0611,
+          "val_accuracy": 0.985,
+          "seconds": 647,
+          "steps": 1122
+        },
+        {
+          "epoch": 4,
+          "loss": 0.017,
+          "accuracy": 0.9955,
+          "val_loss": 0.0343,
+          "val_accuracy": 0.9913,
+          "seconds": 647,
+          "steps": 1122
+        },
+        {
+          "epoch": 5,
+          "loss": 0.0214,
+          "accuracy": 0.9944,
+          "val_loss": 0.0379,
+          "val_accuracy": 0.9902,
+          "seconds": 647,
+          "steps": 1122
+        },
+        {
+          "epoch": 6,
+          "loss": 0.0098,
+          "accuracy": 0.9979,
+          "val_loss": 0.0471,
+          "val_accuracy": 0.9886,
+          "seconds": 647,
+          "steps": 1122
+        }
+      ],
+      "params": {
+        "total": 6287306,
+        "trainable": 6287306,
+        "non_trainable": 0
+      },
+      "epochs_run": 6,
+      "stopped_early": true,
+      "best_epoch": 4,
+      "best_val_accuracy": 0.9913,
+      "best_val_loss": 0.0343,
+      "best_train_accuracy": 0.9955,
+      "seconds_per_epoch": 647,
+      "total_minutes": 64.7
+    },
+    {
+      "key": "transfer",
+      "name": "MobileNet transfer learning (deployed)",
+      "description": "Frozen ImageNet MobileNet + Conv2D 1024 + Dropout 0.2 + GAP + Dense 10. Adam.",
+      "history": [
+        {
+          "epoch": 1,
+          "loss": 2.1284,
+          "accuracy": 0.259,
+          "val_loss": 1.704,
+          "val_accuracy": 0.5334,
+          "seconds": 114,
+          "steps": 18
+        },
+        {
+          "epoch": 2,
+          "loss": 1.4415,
+          "accuracy": 0.6459,
+          "val_loss": 1.1622,
+          "val_accuracy": 0.7797,
+          "seconds": 111,
+          "steps": 18
+        },
+        {
+          "epoch": 3,
+          "loss": 0.9861,
+          "accuracy": 0.8163,
+          "val_loss": 0.8026,
+          "val_accuracy": 0.8748,
+          "seconds": 112,
+          "steps": 18
+        },
+        {
+          "epoch": 4,
+          "loss": 0.6914,
+          "accuracy": 0.8879,
+          "val_loss": 0.5797,
+          "val_accuracy": 0.9139,
+          "seconds": 112,
+          "steps": 18
+        },
+        {
+          "epoch": 5,
+          "loss": 0.51,
+          "accuracy": 0.9189,
+          "val_loss": 0.4444,
+          "val_accuracy": 0.9355,
+          "seconds": 114,
+          "steps": 18
+        },
+        {
+          "epoch": 6,
+          "loss": 0.3982,
+          "accuracy": 0.938,
+          "val_loss": 0.356,
+          "val_accuracy": 0.9502,
+          "seconds": 111,
+          "steps": 18
+        },
+        {
+          "epoch": 7,
+          "loss": 0.3256,
+          "accuracy": 0.9505,
+          "val_loss": 0.2966,
+          "val_accuracy": 0.9545,
+          "seconds": 111,
+          "steps": 18
+        },
+        {
+          "epoch": 8,
+          "loss": 0.2724,
+          "accuracy": 0.9584,
+          "val_loss": 0.2562,
+          "val_accuracy": 0.9616,
+          "seconds": 111,
+          "steps": 18
+        },
+        {
+          "epoch": 9,
+          "loss": 0.2356,
+          "accuracy": 0.9632,
+          "val_loss": 0.2238,
+          "val_accuracy": 0.9663,
+          "seconds": 111,
+          "steps": 18
+        },
+        {
+          "epoch": 10,
+          "loss": 0.2058,
+          "accuracy": 0.9677,
+          "val_loss": 0.1997,
+          "val_accuracy": 0.967,
+          "seconds": 111,
+          "steps": 18
+        },
+        {
+          "epoch": 11,
+          "loss": 0.1826,
+          "accuracy": 0.9724,
+          "val_loss": 0.1818,
+          "val_accuracy": 0.971,
+          "seconds": 111,
+          "steps": 18
+        },
+        {
+          "epoch": 12,
+          "loss": 0.1653,
+          "accuracy": 0.974,
+          "val_loss": 0.1651,
+          "val_accuracy": 0.973,
+          "seconds": 109,
+          "steps": 18
+        },
+        {
+          "epoch": 13,
+          "loss": 0.1484,
+          "accuracy": 0.9778,
+          "val_loss": 0.1521,
+          "val_accuracy": 0.9752,
+          "seconds": 110,
+          "steps": 18
+        },
+        {
+          "epoch": 14,
+          "loss": 0.1375,
+          "accuracy": 0.9782,
+          "val_loss": 0.1418,
+          "val_accuracy": 0.9768,
+          "seconds": 113,
+          "steps": 18
+        },
+        {
+          "epoch": 15,
+          "loss": 0.1261,
+          "accuracy": 0.981,
+          "val_loss": 0.1328,
+          "val_accuracy": 0.9772,
+          "seconds": 111,
+          "steps": 18
+        },
+        {
+          "epoch": 16,
+          "loss": 0.1176,
+          "accuracy": 0.9815,
+          "val_loss": 0.1258,
+          "val_accuracy": 0.9772,
+          "seconds": 112,
+          "steps": 18
+        },
+        {
+          "epoch": 17,
+          "loss": 0.1085,
+          "accuracy": 0.984,
+          "val_loss": 0.1188,
+          "val_accuracy": 0.979,
+          "seconds": 111,
+          "steps": 18
+        },
+        {
+          "epoch": 18,
+          "loss": 0.1007,
+          "accuracy": 0.9861,
+          "val_loss": 0.1109,
+          "val_accuracy": 0.9797,
+          "seconds": 112,
+          "steps": 18
+        },
+        {
+          "epoch": 19,
+          "loss": 0.094,
+          "accuracy": 0.9866,
+          "val_loss": 0.1076,
+          "val_accuracy": 0.9795,
+          "seconds": 112,
+          "steps": 18
+        },
+        {
+          "epoch": 20,
+          "loss": 0.0888,
+          "accuracy": 0.9876,
+          "val_loss": 0.1007,
+          "val_accuracy": 0.9815,
+          "seconds": 116,
+          "steps": 18
+        }
+      ],
+      "params": {
+        "total": 12677322,
+        "trainable": 9448458,
+        "non_trainable": 3228864
+      },
+      "epochs_run": 20,
+      "stopped_early": false,
+      "best_epoch": 20,
+      "best_val_accuracy": 0.9815,
+      "best_val_loss": 0.1007,
+      "best_train_accuracy": 0.9876,
+      "seconds_per_epoch": 112,
+      "total_minutes": 37.2
+    }
+  ],
+  "deployed": {
+    "run": "transfer",
+    "format": "TensorFlow.js layers model (13 shards)",
+    "params": 12677322,
+    "size_mb": 50.7,
+    "cpu_latency": {
+      "median_ms": 71.6,
+      "p90_ms": 73.5,
+      "runs": 40,
+      "batch_size": 1,
+      "device": "CPU (AMD64 Family 25 Model 68 Stepping 1, AuthenticAMD)",
+      "tensorflow": "2.21.0"
+    }
+  },
+  "preprocessing_check": {
+    "raw_0_255": {
+      "predicted": [
+        "c5",
+        "c2",
+        "c2",
+        "c6",
+        "c5",
+        "c3",
+        "c5",
+        "c5"
+      ],
+      "distinct_classes": 4,
+      "mean_top_probability": 0.915,
+      "spread": 0.1411
+    },
+    "rescaled_0_1": {
+      "predicted": [
+        "c5",
+        "c5",
+        "c5",
+        "c5",
+        "c5",
+        "c5",
+        "c5",
+        "c5"
+      ],
+      "distinct_classes": 1,
+      "mean_top_probability": 0.947,
+      "spread": 0.0001
+    }
+  },
+  "samples": [
+    {
+      "file": "sample_01.png",
+      "source": "img_1"
+    },
+    {
+      "file": "sample_02.png",
+      "source": "img_2"
+    },
+    {
+      "file": "sample_03.png",
+      "source": "img_3"
+    },
+    {
+      "file": "sample_04.png",
+      "source": "img_4"
+    },
+    {
+      "file": "sample_05.png",
+      "source": "img_7"
+    },
+    {
+      "file": "sample_06.png",
+      "source": "img_8"
+    },
+    {
+      "file": "sample_07.png",
+      "source": "img_9"
+    },
+    {
+      "file": "sample_08.png",
+      "source": "img_10"
+    }
+  ]
+}

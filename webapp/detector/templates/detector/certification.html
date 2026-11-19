@@ -1,0 +1,99 @@
+{% extends "detector/base.html" %}
+{% load static %}
+{% block title %}Certification · DriveFocus{% endblock %}
+{% block content %}
+<section class="profile card">
+  <img class="profile-photo" src="{% static 'detector/img/joko-eliyanto.png' %}" alt="Photo of {{ author.name }}">
+  <div class="profile-body">
+    <div class="eyebrow">About the author</div>
+    <h1>{{ author.name }}</h1>
+    <p class="lead">{{ author.role }}</p>
+    <div class="social">
+      <a class="social-link" href="{{ author.linkedin }}" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.45 20.45h-3.56v-5.57c0-1.33-.02-3.04-1.85-3.04-1.85 0-2.14 1.45-2.14 2.94v5.67H9.35V9h3.41v1.56h.05c.48-.9 1.64-1.85 3.37-1.85 3.6 0 4.27 2.37 4.27 5.46v6.28zM5.34 7.43a2.06 2.06 0 1 1 0-4.13 2.06 2.06 0 0 1 0 4.13zM7.12 20.45H3.56V9h3.56v11.45zM22.22 0H1.77C.79 0 0 .77 0 1.73v20.54C0 23.23.79 24 1.77 24h20.45c.98 0 1.78-.77 1.78-1.73V1.73C24 .77 23.2 0 22.22 0z"/></svg>
+        LinkedIn
+      </a>
+      <a class="social-link" href="{{ author.github }}" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 .3a12 12 0 0 0-3.8 23.38c.6.12.83-.26.83-.57v-2.02c-3.34.73-4.04-1.61-4.04-1.61-.55-1.39-1.34-1.76-1.34-1.76-1.09-.75.08-.73.08-.73 1.2.08 1.84 1.24 1.84 1.24 1.07 1.83 2.81 1.3 3.5 1 .1-.78.42-1.31.76-1.61-2.67-.3-5.47-1.33-5.47-5.93 0-1.31.47-2.38 1.24-3.22-.14-.3-.54-1.52.1-3.18 0 0 1-.32 3.3 1.23a11.5 11.5 0 0 1 6 0c2.28-1.55 3.29-1.23 3.29-1.23.64 1.66.24 2.88.12 3.18.77.84 1.23 1.91 1.23 3.22 0 4.61-2.8 5.63-5.48 5.92.42.36.81 1.1.81 2.22v3.29c0 .32.21.7.82.58A12 12 0 0 0 12 .3"/></svg>
+        GitHub
+      </a>
+    </div>
+  </div>
+</section>
+
+<div class="grid-2">
+  <section class="card">
+    <h2>How this project relates to the certification</h2>
+    <p>This project is my team's final project for <strong>{{ certificate.programme }}</strong>, a machine learning academy led by Google together with
+       Gojek, Tokopedia and Traveloka. I was in the <strong>{{ certificate.cohort }}</strong> cohort. The final project was the capstone of the
+       programme, built in a team in its last weeks.</p>
+    <p>The programme covered the skills this project relies on:</p>
+    <ul class="facts">
+      <li>Machine learning and deep learning with TensorFlow, including Coursera specialisations.</li>
+      <li>Convolutional neural networks for image classification.</li>
+      <li>Transfer learning from pre-trained models and regularisation with dropout layers.</li>
+      <li>Deploying models to mobile with TensorFlow Lite, mentored by the partner companies' developers.</li>
+    </ul>
+    <p>This portfolio version revisits the 2020 work: it re-runs the published model, audits the notebook, and adds this web app.</p>
+  </section>
+
+  <section class="card badge-card">
+    <img class="badge" src="{% static 'detector/img/logo.svg' %}" alt="">
+    <h2>{{ certificate.title }}</h2>
+    <dl class="cert-meta">
+      <dt>Programme</dt><dd>{{ certificate.programme }}</dd>
+      <dt>Issued by</dt><dd>{{ certificate.issuer }}<br><small class="muted">{{ certificate.partners }}</small></dd>
+      <dt>Awarded to</dt><dd>{{ author.name }}</dd>
+      <dt>Cohort</dt><dd>{{ certificate.cohort }}</dd>
+      <dt>Issued on</dt><dd>{{ certificate.date }}</dd>
+      <dt>Statement</dt><dd>{{ certificate.statement }}</dd>
+    </dl>
+    <div class="actions" style="justify-content:center">
+      <a class="btn" href="{% static 'detector/img/bangkit-certificate.jpg' %}" target="_blank" rel="noopener">View certificate</a>
+      <a class="btn btn-secondary" href="#achievement">Top 4 recognition</a>
+    </div>
+  </section>
+</div>
+
+<section class="card achievement" id="achievement" style="margin-top:24px">
+  <div class="achievement-grid">
+    <div>
+      <div style="display:flex;gap:16px;align-items:center;margin-bottom:8px">
+        <img src="{% static 'detector/img/trophy.svg' %}" alt="" style="width:72px;height:72px">
+        <div>
+          <div class="eyebrow" style="color:var(--yellow-ink)">Achievement · {{ achievement.date }}</div>
+          <h2 style="margin:0">{{ achievement.title }}</h2>
+        </div>
+      </div>
+      <p>The <strong>{{ achievement.publisher }}</strong> featured four final projects as the best ideas of the 2020 cohort, from Jakarta, Bandung, Yogyakarta and Denpasar.
+         Ours, <strong>{{ achievement.project }}</strong>, was the pick from Yogyakarta.</p>
+      <blockquote>“{{ achievement.quote }}”<small>{{ achievement.quote_en }} The team, quoted in the article.</small></blockquote>
+      <h3>The four best projects of Bangkit 2020</h3>
+      <ul class="finalists">
+        {% for name, city, desc in achievement.finalists %}
+        <li{% if city == "Yogyakarta" %} class="current"{% endif %}><span class="rank">{{ forloop.counter }}</span>
+          <span><b>{{ name }}</b> · {{ city }}<br><span class="muted small">{{ desc }}</span></span></li>
+        {% endfor %}
+      </ul>
+      <h3 style="margin-top:18px">Team</h3>
+      <p class="muted">{% for m in team %}{% if m.url %}<a href="{{ m.url }}" target="_blank" rel="noopener">{{ m.name }}</a>{% else %}{{ m.name }}{% endif %}{% if not forloop.last %} · {% endif %}{% endfor %}</p>
+      <div class="actions">
+        <a class="btn" href="{{ achievement.url }}" target="_blank" rel="noopener">Read the article on blog.google</a>
+      </div>
+      <p class="muted small" style="margin-top:10px">“{{ achievement.article }}” ({{ achievement.article_en }}), {{ achievement.publisher }}, {{ achievement.date }}.</p>
+    </div>
+    <a href="{% static 'detector/img/bangkit-top4-blog.jpg' %}" target="_blank" rel="noopener" title="Open the full screenshot">
+      <img class="blog-shot" src="{% static 'detector/img/bangkit-top4-blog.jpg' %}" loading="lazy"
+           alt="Screenshot of the Google Indonesia blog article featuring the Distracted Driver Detector team from Yogyakarta">
+    </a>
+  </div>
+</section>
+
+<section class="card">
+  <h2>Certificate</h2>
+  <a href="{% static 'detector/img/bangkit-certificate.jpg' %}" target="_blank" rel="noopener">
+    <img class="certificate" src="{% static 'detector/img/bangkit-certificate.jpg' %}" loading="lazy"
+         alt="Bangkit certificate of completion awarded to {{ author.name }} on {{ certificate.date }}">
+  </a>
+</section>
+{% endblock %}

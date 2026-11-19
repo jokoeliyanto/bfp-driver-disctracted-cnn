@@ -1,0 +1,31 @@
+{% extends "detector/base.html" %}
+{% block title %}Notebook · DriveFocus{% endblock %}
+{% block head %}<style>{{ highlight_css }}</style>{% endblock %}
+{% block content %}
+<section class="intro">
+  <div class="eyebrow">Notebook</div>
+  <h1>The original 2020 Colab notebook</h1>
+  <p class="lead">The training notebook from the Bangkit capstone, with its saved outputs, rendered as it was run on Google Colab. Section
+     headings were added for reading; the code and outputs are unchanged.</p>
+</section>
+
+<div class="nb-layout">
+  <aside class="card nb-side">
+    <p class="nb-meta"><code>{{ filename }}</code><br>{{ cells }} cells · {{ code_cells }} with code · Python 3 on a Colab GPU</p>
+    <div class="nb-actions">
+      <a class="btn" href="{% url 'detector:notebook_download' %}">Download .ipynb</a>
+      <a class="btn btn-secondary" href="{{ github_url }}" target="_blank" rel="noopener">View on GitHub</a>
+    </div>
+    <div class="callout small">Reading tip: the <a href="{% url 'detector:evaluation' %}">Evaluation page</a> lists four issues found in this notebook,
+       such as the plot in section 7 repeating the baseline curves.</div>
+    {% if toc %}
+    <h2 class="nb-toc-title">Contents</h2>
+    <nav class="nb-toc" aria-label="Notebook contents">
+      {% for h in toc %}<a href="#{{ h.id }}">{{ h.title }}</a>{% endfor %}
+    </nav>
+    {% endif %}
+  </aside>
+  <article class="card nbv">{{ notebook_html }}</article>
+</div>
+{% endblock %}
+{% block footer %}Rendered from notebooks/{{ filename }} with nbconvert.{% endblock %}

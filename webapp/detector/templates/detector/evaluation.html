@@ -1,0 +1,179 @@
+{% extends "detector/base.html" %}
+{% load static detector_extras %}
+{% block title %}Model evaluation · DriveFocus{% endblock %}
+{% block head %}<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>{% endblock %}
+{% block content %}
+<section class="intro">
+  <div class="eyebrow">Model evaluation</div>
+  <h1>Two models, one shipped, and how far to trust 98%</h1>
+  <p class="lead">Both models were trained in the 2020 notebook on {{ metrics.dataset.train_images|thousands }} images and validated on
+     {{ metrics.dataset.val_images|thousands }}. The curves and tables below are parsed from its saved training logs. Size and speed were
+     measured on the published model.</p>
+</section>
+
+<div class="grid-4 stack">
+  <div class="stat blue"><div class="value">{{ deployed.best_val_accuracy|pct:2 }}</div><div class="label">MobileNet validation accuracy</div><div class="note">deployed · epoch {{ deployed.best_epoch }}</div></div>
+  <div class="stat red"><div class="value">{{ baseline.best_val_accuracy|pct:2 }}</div><div class="label">Baseline CNN validation accuracy</div><div class="note">from scratch · epoch {{ baseline.best_epoch }}</div></div>
+  <div class="stat yellow"><div class="value">{{ metrics.deployed.size_mb }} MB</div><div class="label">Model size</div><div class="note">{{ metrics.deployed.params|millions }} parameters, float32</div></div>
+  <div class="stat green"><div class="value">{{ metrics.deployed.cpu_latency.median_ms|floatformat:0 }} ms</div><div class="label">Latency per frame</div><div class="note">CPU median, p90 {{ metrics.deployed.cpu_latency.p90_ms|floatformat:0 }} ms</div></div>
+</div>
+
+<div class="grid-2 stack">
+  <section class="card">
+    <h2>Validation accuracy per epoch</h2>
+    <div class="chart-box"><canvas id="acc-chart" aria-label="Validation accuracy per epoch for both models"></canvas></div>
+  </section>
+  <section class="card">
+    <h2>Loss per epoch <span class="muted small">(log scale)</span></h2>
+    <div class="chart-box"><canvas id="loss-chart" aria-label="Training and validation loss per epoch for both models"></canvas></div>
+  </section>
+</div>
+
+<section class="card stack">
+  <h2>Head-to-head</h2>
+  <div class="table-wrap"><table class="verdict-table">
+    <thead><tr><th></th><th class="num">Baseline CNN</th><th class="num">MobileNet transfer (deployed)</th></tr></thead>
+    <tbody>
+      <tr><td>Best validation accuracy</td><td class="num">{{ baseline.best_val_accuracy|pct:2 }}</td><td class="num">{{ deployed.best_val_accuracy|pct:2 }}</td></tr>
+      <tr><td>Best validation loss</td><td class="num">{{ baseline.best_val_loss }}</td><td class="num">{{ deployed.best_val_loss }}</td></tr>
+      <tr><td>Train accuracy at that epoch</td><td class="num">{{ baseline.best_train_accuracy|pct:2 }}</td><td class="num">{{ deployed.best_train_accuracy|pct:2 }}</td></tr>
+      <tr><td>Epochs run</td><td class="num">{{ baseline.epochs_run }}{% if baseline.stopped_early %} (early stop){% endif %}</td><td class="num">{{ deployed.epochs_run }}{% if not deployed.stopped_early %} (still improving){% endif %}</td></tr>
+      <tr><td>Time per epoch (Colab GPU)</td><td class="num">{{ baseline.seconds_per_epoch }} s</td><td class="num">{{ deployed.seconds_per_epoch }} s</td></tr>
+      <tr><td>Total training time</td><td class="num">{{ baseline.total_minutes }} min</td><td class="num">{{ deployed.total_minutes }} min</td></tr>
+      <tr><td>Parameters (trainable)</td><td class="num">{{ baseline.params.total|thousands }} ({{ baseline.params.trainable|thousands }})</td><td class="num">{{ deployed.params.total|thousands }} ({{ deployed.params.trainable|thousands }})</td></tr>
+      <tr><td>Architecture</td><td class="small">{{ baseline.description }}</td><td class="small">{{ deployed.description }}</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<div class="grid-2 stack">
+  <section class="card accent">
+    <h2>Why ship the lower-scoring model?</h2>
+    <p>On paper the baseline wins by {{ baseline.best_val_accuracy|floatformat:4 }} vs {{ deployed.best_val_accuracy|floatformat:4 }}. We still deployed MobileNet:</p>
+    <ul class="facts">
+      <li><b>The gap is one point on a leaky split</b> (next card). A validation set that shares drivers with training rewards memorising them, which says little about new drivers.</li>
+      <li><b>The baseline learns all {{ baseline.params.total|millions }} weights from 26 drivers.</b> MobileNet's frozen ImageNet features cannot memorise those drivers, so it has less room to overfit.</li>
+      <li><b>It was still improving.</b> Validation loss fell at every one of the {{ deployed.epochs_run }} epochs, so more epochs or fine-tuning would likely close the gap.</li>
+      <li><b>It trains {{ baseline.seconds_per_epoch|floatformat:0 }}/{{ deployed.seconds_per_epoch }} ≈ 6× faster per epoch</b> and is built from mobile-friendly depthwise-separable convolutions.</li>
+    </ul>
+  </section>
+  <section class="card accent red">
+    <h2>How far to trust 98%</h2>
+    <p>The validation set was made with Keras' <code>validation_split=0.2</code>, which simply takes 20% of each class folder. The State Farm photos
+       are consecutive frames of <b>{{ metrics.dataset.n_drivers }} drivers</b>, so the same people, in the same car and clothes, appear in both training and validation.
+       Near-duplicate frames make validation look much easier than real use.</p>
+    <p>The honest test for this product is a <b>split by driver</b> (for example, GroupKFold on the <code>subject</code> column of
+       <code>driver_imgs_list.csv</code>): train on some drivers, measure on people the model has never seen. That is what a real customer is.
+       Until then, read 98% as an upper bound.</p>
+  </section>
+</div>
+
+<section class="card stack">
+  <h2>Confusion matrix and distraction recall</h2>
+  {% if evaluation %}
+    <p class="muted">From <code>scripts/evaluate.py</code> on the {{ evaluation.subset }} subset ({{ evaluation.n_images|thousands }} images), {{ evaluation.generated }}.</p>
+    <div class="grid-4 stack">
+      <div class="stat blue"><div class="value">{{ evaluation.accuracy|pct:1 }}</div><div class="label">10-class accuracy</div></div>
+      <div class="stat red"><div class="value">{{ evaluation.binary.distracted_recall|pct:1 }}</div><div class="label">Distractions caught</div></div>
+      <div class="stat yellow"><div class="value">{{ evaluation.binary.false_alarm_rate|pct:1 }}</div><div class="label">False alarms</div><div class="note">of safe-driving frames</div></div>
+      <div class="stat green"><div class="value">{{ evaluation.binary.accuracy|pct:1 }}</div><div class="label">Safe vs distracted accuracy</div></div>
+    </div>
+    <div class="table-wrap"><table class="cm">
+      <thead><tr><th>actual ↓ / predicted →</th>{% for c in metrics.classes %}<th>{{ c.code }}</th>{% endfor %}</tr></thead>
+      <tbody>
+        {% for row in matrix %}
+        <tr><th>{{ row.actual }}</th>
+          {% for cell in row.cells %}
+          <td class="cell" style="background:{% if cell.diagonal %}rgba(52,168,83,{{ cell.share|floatformat:2 }}){% else %}rgba(234,67,53,{{ cell.share|floatformat:2 }}){% endif %}">{{ cell.value }}</td>
+          {% endfor %}
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table></div>
+  {% else %}
+    <div class="callout blue">
+      <p style="margin-top:0"><b>Not computed yet: the images are not in this repository.</b> The State Farm data can only be downloaded from Kaggle after
+         accepting the competition rules, and the 2020 notebook saved only training logs, not per-image predictions. To fill this section:</p>
+      <pre style="background:#fff;border-radius:12px;padding:12px;overflow-x:auto;margin-bottom:0"><code style="background:none">kaggle competitions download -c state-farm-distracted-driver-detection
+unzip state-farm-distracted-driver-detection.zip -d data/raw
+python scripts/evaluate.py --data data/raw            # writes models/evaluation.json</code></pre>
+    </div>
+    <p class="muted small">The script rebuilds the notebook's exact validation subset (first 20% of each class folder), then reports the confusion matrix,
+       per-class precision and recall, the business metrics (distractions caught, false alarms on safe driving) and accuracy per driver.</p>
+  {% endif %}
+</section>
+
+<section class="card stack">
+  <h2>Audit of the 2020 notebook</h2>
+  <p class="muted">Revisiting the project turned up four things a reviewer should know. None changes the published weights; all are handled in this web app.</p>
+  <div class="finding red"><div class="n">1</div><div>
+    <h3>The published weights expect raw pixels, not the notebook's 0–1 scaling</h3>
+    <p>The notebook's generators use <code>rescale=1./255</code>, but the TensorFlow.js model in <code>models/tfjs</code> only works on raw 0–255 values.
+       On the eight example frames, raw input gives {{ check.raw_0_255.distinct_classes }} different activities with spread {{ check.raw_0_255.spread }};
+       rescaled input gives the same class for all eight (spread {{ check.rescaled_0_1.spread }}), the signature of an input-range mismatch.
+       The architecture and parameter count ({{ metrics.deployed.params|thousands }}) match the notebook exactly, so the published file is a run of the same
+       model trained without rescaling. The app feeds raw pixels.</p></div></div>
+  <div class="finding yellow"><div class="n">2</div><div>
+    <h3>Class order: Kaggle codes, not the notebook's folder names</h3>
+    <p>In the notebook the folders were renamed ("Doing Hair or Makeup", "Drinking", …), so Keras sorted the classes alphabetically into a different order.
+       The published model and <code>models/labels.txt</code> follow the Kaggle order <code>c0</code>–<code>c9</code>, which is the one that gives sensible
+       predictions on the example frames (for instance, the frame of a woman who appears to be drinking → <code>c6</code> drinking, and two drivers holding a phone to the ear → <code>c2</code>). The app uses the c0–c9 order.</p></div></div>
+  <div class="finding blue"><div class="n">3</div><div>
+    <h3>The "improvement model" plot repeats the baseline curves</h3>
+    <p>The plotting cell after the MobileNet run calls <code>plot_train_history(history)</code>, the baseline history, instead of <code>history1</code>.
+       The curves above are re-drawn from the logged numbers of both runs.</p></div></div>
+  <div class="finding green"><div class="n">4</div><div>
+    <h3>Saved outputs come from more than one session</h3>
+    <p>The MobileNet log shows 18 steps per epoch, which implies batches of about 1,000 images, while the code says <code>BATCH_SIZE = 16</code>; and the
+       optimizer stored in <code>model.json</code> uses a learning rate of 0.001 rather than the notebook's 1e-5. The numbers on this page are taken from the
+       logs as saved.</p></div></div>
+</section>
+
+<section class="card">
+  <h2>Epoch-by-epoch logs</h2>
+  {% for run in metrics.runs %}
+  <details{% if forloop.last %} open{% endif %}>
+    <summary>{{ run.name }} · {{ run.epochs_run }} epochs</summary>
+    <div class="table-wrap"><table>
+      <thead><tr><th class="num">Epoch</th><th class="num">Loss</th><th class="num">Accuracy</th><th class="num">Val loss</th><th class="num">Val accuracy</th><th class="num">Time</th></tr></thead>
+      <tbody>
+        {% for e in run.history %}
+        <tr{% if e.epoch == run.best_epoch %} class="highlight"{% endif %}><td class="num">{{ e.epoch }}</td><td class="num">{{ e.loss }}</td><td class="num">{{ e.accuracy }}</td>
+            <td class="num">{{ e.val_loss }}</td><td class="num">{{ e.val_accuracy }}</td><td class="num">{{ e.seconds }} s</td></tr>
+        {% endfor %}
+      </tbody>
+    </table></div>
+  </details>
+  {% endfor %}
+  <p class="muted small">Highlighted: the checkpoint kept (<code>save_best_only</code> on validation loss). Latency measured with TensorFlow
+     {{ metrics.deployed.cpu_latency.tensorflow }} on {{ metrics.deployed.cpu_latency.device }}, {{ metrics.deployed.cpu_latency.runs }} runs.</p>
+</section>
+
+{{ chart|json_script:"chart-data" }}
+<script>
+  const data = JSON.parse(document.getElementById("chart-data").textContent);
+  const C = { baseline: "#EA4335", transfer: "#4285F4" };
+  Chart.defaults.font.family = "Roboto, system-ui, sans-serif";
+  Chart.defaults.color = "#5f6368";
+  const epochs = Array.from({ length: Math.max(...Object.values(data).map(r => r.epochs.length)) }, (_, i) => i + 1);
+  const line = (run, key, dashed) => ({
+    label: `${data[run].name.replace(" (deployed)", "")} · ${key.startsWith("val") ? "validation" : "train"}`,
+    data: data[run][key], borderColor: C[run], backgroundColor: C[run], borderWidth: dashed ? 1.5 : 2.5,
+    borderDash: dashed ? [5, 4] : [], pointRadius: dashed ? 0 : 3, tension: .25,
+  });
+  const options = (yTitle, log) => ({
+    responsive: true, maintainAspectRatio: false, interaction: { mode: "index", intersect: false },
+    plugins: { legend: { position: "bottom", labels: { boxWidth: 18, boxHeight: 3 } } },
+    scales: { x: { title: { display: true, text: "Epoch" }, grid: { display: false } },
+              y: { type: log ? "logarithmic" : "linear", title: { display: true, text: yTitle }, grid: { color: "#f1f3f4" } } },
+  });
+  new Chart(document.getElementById("acc-chart"), { type: "line",
+    data: { labels: epochs, datasets: [line("baseline", "val_accuracy"), line("transfer", "val_accuracy"),
+                                       line("baseline", "accuracy", true), line("transfer", "accuracy", true)] },
+    options: options("Accuracy") });
+  new Chart(document.getElementById("loss-chart"), { type: "line",
+    data: { labels: epochs, datasets: [line("baseline", "val_loss"), line("transfer", "val_loss"),
+                                       line("baseline", "loss", true), line("transfer", "loss", true)] },
+    options: options("Categorical cross-entropy", true) });
+</script>
+{% endblock %}
