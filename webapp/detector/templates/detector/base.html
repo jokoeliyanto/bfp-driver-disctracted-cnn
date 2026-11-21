@@ -18,17 +18,18 @@
     <div class="wrap topbar-inner">
       <a class="brand" href="{% url 'detector:detect' %}">
         <img src="{% static 'detector/img/logo.svg' %}" alt="">
-        <span><span class="brand-name"><b>Drive</b><b>Focus</b></span><span class="brand-sub">Distracted driver detection · Bangkit 2020</span></span>
+        <span><span class="brand-name"><b>Distracted</b><b>Driver</b><b>Detection</b></span><span class="brand-sub">Final Project Bangkit 2020</span></span>
       </a>
-      <nav>
-        {% with name=request.resolver_match.url_name %}
-        <a href="{% url 'detector:detect' %}" {% if name == 'detect' %}class="active"{% endif %}><span class="dot"></span>Detect</a>
-        <a href="{% url 'detector:project' %}" {% if name == 'project' %}class="active"{% endif %}><span class="dot"></span>The project</a>
-        <a href="{% url 'detector:evaluation' %}" {% if name == 'evaluation' %}class="active"{% endif %}><span class="dot"></span>Model evaluation</a>
-        <a href="{% url 'detector:notebook' %}" {% if name == 'notebook' %}class="active"{% endif %}><span class="dot"></span>Notebook</a>
-        <a href="{% url 'detector:certification' %}" {% if name == 'certification' %}class="active"{% endif %}><span class="dot"></span>Certification</a>
-        {% endwith %}
-      </nav>
+       <nav>
+         {% with name=request.resolver_match.url_name %}
+         <a href="{% url 'detector:detect' %}" {% if name == 'detect' %}class="active"{% endif %}><span class="dot"></span>Detect</a>
+         <a href="{% url 'detector:project' %}" {% if name == 'project' %}class="active"{% endif %}><span class="dot"></span>The project</a>
+         <a href="{% url 'detector:evaluation' %}" {% if name == 'evaluation' %}class="active"{% endif %}><span class="dot"></span>Model evaluation</a>
+         <a href="{% url 'detector:notebook' %}" {% if name == 'notebook' %}class="active"{% endif %}><span class="dot"></span>Notebook</a>
+         <a href="{% url 'detector:slides' %}" {% if name == 'slides' %}class="active"{% endif %}><span class="dot"></span>Slides</a>
+         <a href="{% url 'detector:certification' %}" {% if name == 'certification' %}class="active"{% endif %}><span class="dot"></span>Certification</a>
+         {% endwith %}
+       </nav>
     </div>
   </header>
 

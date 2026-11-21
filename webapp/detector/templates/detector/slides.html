@@ -1,0 +1,48 @@
+{% extends "detector/base.html" %}
+{% load static %}
+{% block title %}Slides & Presentation · Distracted Driver Detection{% endblock %}
+{% block content %}
+<section class="hero stack">
+  <div>
+    <div class="eyebrow">Presentation Materials</div>
+    <h1>Slides & Video Presentation</h1>
+    <p class="lead">Final Project Bangkit 2020 - Distracted Driver Detection presentation slides and video recording from the capstone showcase.</p>
+  </div>
+</section>
+
+<section class="card stack">
+  <h2>Video Presentation</h2>
+  <p>Watch the full video presentation of the Distracted Driver Detection project from the Bangkit 2020 capstone showcase.</p>
+  <div style="margin-top: 20px; position: relative; width: 100%; padding-bottom: 62.5%;">
+    <iframe src="https://drive.google.com/file/d/1JnPUrnjeKY4l63zvS02sCISOZm_Y1OoA/preview" 
+            style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; border-radius: 4px;"
+            allow="autoplay"></iframe>
+  </div>
+</section>
+
+<section class="card stack">
+  <h2>Presentation Slides</h2>
+  <p>Complete presentation slides covering the project overview, methodology, results, and future work.</p>
+  <div style="margin-top: 20px;">
+    <embed src="{% static 'detector/presentations/Distracted Driver Detection - Indonesia.pdf' %}" 
+           type="application/pdf" 
+           style="width: 100%; height: 700px; border: none; border-radius: 4px;"/>
+  </div>
+  <div class="actions" style="margin-top: 20px;">
+    <a class="btn" href="{% static 'detector/presentations/Distracted Driver Detection - Indonesia.pdf' %}" target="_blank" rel="noopener">
+      Download PDF
+    </a>
+  </div>
+</section>
+
+<section class="card stack">
+  <h2>Presentation Overview</h2>
+  <ul class="facts">
+    <li><b>Problem Statement:</b> Detect distracted driving in real time on a phone without internet connection.</li>
+    <li><b>Solution:</b> Compact CNN using MobileNet transfer learning deployed as TensorFlow Lite on Android.</li>
+    <li><b>Results:</b> High recall on distraction detection with low latency suitable for mobile deployment.</li>
+    <li><b>Impact:</b> Named one of the four best final projects of Bangkit 2020 cohort by Google Indonesia.</li>
+    <li><b>Future Work:</b> Right-hand-drive vehicle adaptation, driver-split evaluation, and temporal smoothing.</li>
+  </ul>
+</section>
+{% endblock %}

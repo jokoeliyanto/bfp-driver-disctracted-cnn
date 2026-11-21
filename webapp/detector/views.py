@@ -130,6 +130,10 @@ def certification_view(request):
         **_common_context(), "author": AUTHOR, "certificate": CERTIFICATE, "achievement": ACHIEVEMENT, "team": TEAM})
 
 
+def slides_view(request):
+    return render(request, "detector/slides.html", {**_common_context()})
+
+
 # --------------------------------------------------------------------------- #
 # API
 # --------------------------------------------------------------------------- #
