@@ -90,10 +90,38 @@
 </section>
 
 <section class="card">
-  <h2>Certificate</h2>
+  <h2>Bangkit Certificate</h2>
   <a href="{% static 'detector/img/bangkit-certificate.jpg' %}" target="_blank" rel="noopener">
     <img class="certificate" src="{% static 'detector/img/bangkit-certificate.jpg' %}" loading="lazy"
          alt="Bangkit certificate of completion awarded to {{ author.name }} on {{ certificate.date }}">
   </a>
+</section>
+
+<section class="card">
+  <h2>Additional Certifications</h2>
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+    <div>
+      <h3 style="margin-top: 0;">DeepLearning.AI - TensorFlow Developer</h3>
+      <a href="{% static 'detector/img/coursera-certificate.jpg' %}" target="_blank" rel="noopener">
+        <img src="{% static 'detector/img/coursera-certificate.jpg' %}" loading="lazy"
+             alt="DeepLearning.AI TensorFlow Developer certificate"
+             style="width: 100%; border-radius: 4px;">
+      </a>
+      <p style="margin-top: 12px; margin-bottom: 0; font-size: 0.9em; color: #666;">
+        Credential: <a href="https://www.coursera.org/account/accomplishments/specialization/E32DMWHAY3PL" target="_blank" rel="noopener" style="color: #0066cc; text-decoration: none;">E32DMWHAY3PL</a>
+      </p>
+    </div>
+    <div>
+      <h3 style="margin-top: 0;">Google - TensorFlow Developer</h3>
+      <a href="{% static 'detector/img/google-ml-engineer-certificate.jpg' %}" target="_blank" rel="noopener">
+        <img src="{% static 'detector/img/google-ml-engineer-certificate.jpg' %}" loading="lazy"
+             alt="Google TensorFlow Developer certificate"
+             style="width: 100%; border-radius: 4px;">
+      </a>
+      <p style="margin-top: 12px; margin-bottom: 0; font-size: 0.9em; color: #666;">
+        Credential: <a href="https://www.credential.net/3e127b1c-c46b-49d3-8eb0-ce8d475e44d5#acc.zHPIW2UD" target="_blank" rel="noopener" style="color: #0066cc; text-decoration: none;">qiwiwcyb</a>
+      </p>
+    </div>
+  </div>
 </section>
 {% endblock %}
